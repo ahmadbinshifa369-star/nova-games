@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArcadeVault 3D - Ultimate Web Gaming Hub</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Three.js Engine for 3D Games -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Tone.js for Ambient Audio -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap');
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #0b0f19;
+      color: #f3f4f6;
+      overflow-x: hidden;
+    }
+
+    .glass {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .discord-btn {
+      background: linear-gradient(135deg, #5865F2, #404EED);
+      box-shadow: 0 0 15px rgba(88, 101, 242, 0.4);
+    }
+
+    .discord-btn:hover {
+      box-shadow: 0 0 25px rgba(88, 101, 242, 0.7);
+      transform: translateY(-2px);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0b0f19; }
+    ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+
+    canvas { display: block; touch-action: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP HEADER NAVBAR -->
+  <header class="sticky top-0 z-40 glass border-b border-gray-800 px-4 lg:px-8 py-3 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center font-black text-xl shadow-lg">
+        AV
+      </div>
+      <div>
+        <h1 class="text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">
+          ARCADE<span class="text-white">VAULT</span>
+        </h1>
+        <p class="text-[10px] text-gray-400 tracking-widest font-semibold uppercase">3D Web Gaming Portal</p>
+      </div>
+    </div>
+
+    <!-- Search Input -->
+    <div class="hidden md:flex items-center flex-1 max-w-md mx-8 relative">
+      <i data-lucide="search" class="absolute left-3 w-4 h-4 text-gray-400"></i>
+      <input type="text" id="searchInput" onkeyup="filterGames()" placeholder="Search Subway Surfers, Minecraft, Racing..." 
+        class="w-full bg-gray-900/90 border border-gray-700/60 rounded-full py-2 pl-10 pr-4 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition">
+    </div>
+
+    <!-- Right Controls (Audio Synth & Discord Tag) -->
+    <div class="flex items-center space-x-3">
+      <!-- Synth Audio -->
+      <button onclick="toggleAudio()" id="synthBtn" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gray-800/80 hover:bg-gray-700 border border-gray-700 text-xs text-gray-300 transition">
+        <i data-lucide="music" id="musicIcon" class="w-4 h-4 text-purple-400"></i>
+        <span id="musicText" class="hidden sm:inline">Calm Music: OFF</span>
+      </button>
+
+      <!-- Discord ID Badge abs_org -->
+      <a href="https://discord.com" target="_blank" class="discord-btn flex items-center space-x-2 px-4 py-2 rounded-xl text-white font-semibold text-xs transition duration-300">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 127.14 96.36">
+          <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-20.08-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74c6.51,0,11.62,5.78,11.44,12.74C53.89,60,48.81,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74c6.42,0,11.53,5.78,11.35,12.74C96.04,60,91,65.69,84.69,65.69Z"/>
+        </svg>
+        <span class="tracking-wide">abs_org</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- FEATURED HERO BANNER -->
+  <div class="relative w-full bg-gradient-to-r from-indigo-950 via-purple-950 to-gray-950 px-6 py-10 lg:py-14 border-b border-gray-800 flex flex-col md:flex-row items-center justify-between">
+    <div class="max-w-xl z-10">
+      <span class="px-3 py-1 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-full text-xs font-bold uppercase tracking-widest">
+        Featured 3D Game
+      </span>
+      <h2 class="text-3xl lg:text-5xl font-black mt-3 text-white tracking-tight">
+        SUBWAY SURFERS 3D
+      </h2>
+      <p class="text-gray-400 text-sm md:text-base mt-2">
+        Full 3D endless runner engine! Switch 3 lanes, jump over hurdles, dodge oncoming obstacles, and score as high as you can!
+      </p>
+      <div class="flex items-center space-x-4 mt-6">
+        <button onclick="openGame('subway')" class="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg transition transform hover:scale-105 flex items-center space-x-2">
+          <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+          <span>PLAY NOW</span>
+        </button>
+        <button onclick="openGame('minecraft')" class="px-6 py-3 bg-gray-800/80 hover:bg-gray-700 border border-gray-700 text-gray-200 font-bold rounded-xl transition flex items-center space-x-2">
+          <i data-lucide="box" class="w-5 h-5 text-green-400"></i>
+          <span>MINECRAFT 3D</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="mt-8 md:mt-0 relative w-full md:w-1/2 max-w-md h-52 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-2xl overflow-hidden shadow-2xl border border-indigo-400/30 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/40"></div>
+      <div class="text-center z-10 p-6">
+        <i data-lucide="gamepad-2" class="w-16 h-16 text-indigo-300 mx-auto animate-bounce"></i>
+        <p class="text-white font-extrabold text-xl mt-2">Instant Play Engine</p>
+        <p class="text-gray-300 text-xs">WebGL 3D Graphics • No Loading Errors</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORY FILTER STRIP -->
+  <div class="px-6 py-4 bg-gray-900/60 border-b border-gray-800/80 flex items-center space-x-2 overflow-x-auto">
+    <button onclick="filterCategory('all')" class="cat-btn active px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold whitespace-nowrap transition">All Games</button>
+    <button onclick="filterCategory('3d')" class="cat-btn px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold whitespace-nowrap transition">3D Games</button>
+    <button onclick="filterCategory('action')" class="cat-btn px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold whitespace-nowrap transition">Action</button>
+    <button onclick="filterCategory('racing')" class="cat-btn px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold whitespace-nowrap transition">Racing</button>
+    <button onclick="filterCategory('arcade')" class="cat-btn px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold whitespace-nowrap transition">Arcade</button>
+  </div>
+
+  <!-- MAIN GAMES CATALOG GRID -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6">
+    <h3 class="text-lg font-extrabold text-gray-200 tracking-wide mb-6 flex items-center space-x-2">
+      <i data-lucide="sparkles" class="w-5 h-5 text-indigo-400"></i>
+      <span>SELECT A GAME TO PLAY</span>
+    </h3>
+
+    <div id="gamesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Injected by JavaScript -->
+    </div>
+  </main>
+
+  <!-- GAME PLAYER MODAL -->
+  <div id="gameModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex-col">
+    <!-- Modal Header -->
+    <div class="px-6 py-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div id="modalGameIcon" class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm"></div>
+        <div>
+          <h3 id="modalGameTitle" class="text-base font-extrabold text-white">Game Title</h3>
+          <p id="modalGameCategory" class="text-xs text-indigo-400 uppercase font-semibold">3D Game Engine</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <button onclick="toggleModalFullscreen()" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs transition flex items-center space-x-1">
+          <i data-lucide="maximize" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Fullscreen</span>
+        </button>
+        <button onclick="closeGameModal()" class="p-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Game Canvas Rendering Container -->
+    <div class="flex-1 relative bg-black flex items-center justify-center overflow-hidden" id="canvasContainer">
+      <canvas id="gameCanvas" class="w-full h-full max-w-5xl max-h-[80vh] shadow-2xl rounded-lg border border-gray-800"></canvas>
+      
+      <!-- Controls Overlay -->
+      <div id="gameControlsBar" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur px-6 py-2.5 rounded-full border border-gray-700/80 text-xs text-gray-300 flex items-center space-x-4 shadow-xl">
+        <span class="font-bold text-indigo-400">CONTROLS:</span>
+        <span id="controlsText">Arrow Keys / WASD</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-gray-800/80 py-6 px-8 bg-gray-950 text-center text-xs text-gray-500">
+    <p>© ArcadeVault 3D Platform • Discord Community: <span class="text-indigo-400 font-bold">abs_org</span></p>
+  </footer>
+
+  <!-- ENGINE SCRIPTS -->
+  <script>
+    lucide.createIcons();
+
+    // 1. GAME DATA CATALOG
+    const gamesData = [
+      {
+        id: 'subway',
+        title: 'Subway Surfers 3D',
+        category: '3d',
+        desc: '3D endless runner. Dodge red hurdles, switch lanes, jump and achieve high scores!',
+        controls: 'Left/Right Arrow to switch lanes, Up Arrow / W to Jump',
+        color: 'from-amber-500 to-red-600',
+        icon: 'footprints'
+      },
+      {
+        id: 'minecraft',
+        title: 'Minecraft Voxel 3D',
+        category: '3d',
+        desc: 'Explore a 3D blocky world terrain generated right in your browser.',
+        controls: 'Mouse drag to rotate view around the 3D voxel terrain',
+        color: 'from-emerald-500 to-green-700',
+        icon: 'box'
+      },
+      {
+        id: 'racing',
+        title: 'Highway Speed Racer',
+        category: 'racing',
+        desc: 'Steer around oncoming traffic at high speeds!',
+        controls: 'Left / Right Arrow keys to steer your car',
+        color: 'from-blue-500 to-indigo-600',
+        icon: 'car'
+      },
+      {
+        id: 'invaders',
+        title: 'Space Galaxy Defender',
+        category: 'action',
+        desc: 'Shoot incoming enemy space invaders with lasers!',
+        controls: 'Left/Right Arrow to move, Spacebar to Shoot',
+        color: 'from-purple-600 to-pink-600',
+        icon: 'rocket'
+      },
+      {
+        id: 'flappy',
+        title: 'Neon Flappy Dash',
+        category: 'arcade',
+        desc: 'Tap screen or press Spacebar to flap through gaps.',
+        controls: 'Spacebar or Click Screen to Jump',
+        color: 'from-pink-500 to-rose-600',
+        icon: 'zap'
+      }
+    ];
+
+    // Render Game Cards
+    function renderGames(filter = 'all', query = '') {
+      const grid = document.getElementById('gamesGrid');
+      grid.innerHTML = '';
+
+      const filtered = gamesData.filter(game => {
+        const matchesCat = filter === 'all' || game.category === filter;
+        const matchesQuery = game.title.toLowerCase().includes(query.toLowerCase());
+        return matchesCat && matchesQuery;
+      });
+
+      filtered.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'glass rounded-2xl p-5 hover:border-indigo-500/50 transition duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between group cursor-pointer';
+        card.onclick = () => openGame(game.id);
+
+        card.innerHTML = `
+          <div>
+            <div class="w-full h-36 rounded-xl bg-gradient-to-tr ${game.color} flex items-center justify-center shadow-lg relative overflow-hidden mb-4 group-hover:scale-[1.02] transition">
+              <i data-lucide="${game.icon}" class="w-12 h-12 text-white/90 drop-shadow-md"></i>
+            </div>
+            <span class="px-2.5 py-1 rounded-full bg-gray-800 text-[10px] font-bold text-indigo-400 uppercase tracking-wider">${game.category}</span>
+            <h4 class="text-lg font-bold text-white mt-2 group-hover:text-indigo-300 transition">${game.title}</h4>
+            <p class="text-gray-400 text-xs mt-1 line-clamp-2">${game.desc}</p>
+          </div>
+          <button class="mt-5 w-full py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 border border-indigo-500/30 text-indigo-300 hover:text-white font-bold text-xs transition flex items-center justify-center space-x-2">
+            <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+            <span>PLAY NOW</span>
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    function filterCategory(cat) {
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-gray-800', 'text-gray-300');
+      });
+      event.target.classList.remove('bg-gray-800', 'text-gray-300');
+      event.target.classList.add('bg-indigo-600', 'text-white');
+      renderGames(cat, document.getElementById('searchInput').value);
+    }
+
+    function filterGames() {
+      renderGames('all', document.getElementById('searchInput').value);
+    }
+
+    // 2. AMBIENT MUSIC SYNTHESIZER
+    let synth = null;
+    let isPlayingAudio = false;
+
+    function toggleAudio() {
+      if (!synth) {
+        synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        synth.volume.value = -12;
+      }
+      const btn = document.getElementById('synthBtn');
+      const text = document.getElementById('musicText');
+
+      if (!isPlayingAudio) {
+        Tone.start();
+        Tone.Transport.bpm.value = 60;
+        new Tone.Loop(time => {
+          synth.triggerAttackRelease(["C3", "E3", "G3", "B3"], "2n", time);
+        }, "2n").start(0);
+        Tone.Transport.start();
+        isPlayingAudio = true;
+        text.innerText = "Calm Music: ON";
+        btn.classList.add('bg-indigo-600', 'text-white');
+      } else {
+        Tone.Transport.stop();
+        isPlayingAudio = false;
+        text.innerText = "Calm Music: OFF";
+        btn.classList.remove('bg-indigo-600', 'text-white');
+      }
+    }
+
+    // 3. GAME RUNTIME LOGIC
+    let currentGameLoop = null;
+    let currentThreeRenderer = null;
+
+    function openGame(gameId) {
+      const game = gamesData.find(g => g.id === gameId);
+      if (!game) return;
+
+      document.getElementById('modalGameTitle').innerText = game.title;
+      document.getElementById('modalGameCategory').innerText = game.category + ' Engine';
+      document.getElementById('controlsText').innerText = game.controls;
+      document.getElementById('modalGameIcon').innerText = game.title[0];
+
+      document.getElementById('gameModal').classList.remove('hidden');
+      document.getElementById('gameModal').classList.add('flex');
+
+      stopCurrentGame();
+
+      if (gameId === 'subway') launchSubwaySurfers();
+      else if (gameId === 'minecraft') launchMinecraft();
+      else if (gameId === 'racing') launchRacing();
+      else if (gameId === 'invaders') launchInvaders();
+      else if (gameId === 'flappy') launchFlappy();
+    }
+
+    function closeGameModal() {
+      stopCurrentGame();
+      document.getElementById('gameModal').classList.add('hidden');
+      document.getElementById('gameModal').classList.remove('flex');
+    }
+
+    function stopCurrentGame() {
+      if (currentGameLoop) cancelAnimationFrame(currentGameLoop);
+      if (currentThreeRenderer) {
+        currentThreeRenderer.dispose();
+        currentThreeRenderer = null;
+      }
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function toggleModalFullscreen() {
+      const container = document.getElementById('canvasContainer');
+      if (!document.fullscreenElement) container.requestFullscreen();
+      else document.exitFullscreen();
+    }
+
+    // --- GAME 1: 3D SUBWAY SURFERS ---
+    function launchSubwaySurfers() {
+      const canvas = document.getElementById('gameCanvas');
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0f172a);
+
+      const camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      currentThreeRenderer = renderer;
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+
+      // Player Runner
+      const player = new THREE.Mesh(
+        new THREE.BoxGeometry(0.8, 1.6, 0.8),
+        new THREE.MeshBasicMaterial({ color: 0x6366f1 })
+      );
+      player.position.set(0, 0.8, 0);
+      scene.add(player);
+
+      let currentLane = 0;
+      let playerY = 0.8;
+      let velocityY = 0;
+      let isJumping = false;
+
+      const obstacles = [];
+      function spawnObstacle() {
+        const lane = Math.floor(Math.random() * 3) - 1;
+        const obs = new THREE.Mesh(
+          new THREE.BoxGeometry(1.2, 1.2, 1.2),
+          new THREE.MeshBasicMaterial({ color: 0xef4444 })
+        );
+        obs.position.set(lane * 2.5, 0.6, -40);
+        scene.add(obs);
+        obstacles.push(obs);
+      }
+      setInterval(spawnObstacle, 1500);
+
+      camera.position.set(0, 3, 5);
+      camera.lookAt(0, 1, -5);
+
+      window.onkeydown = (e) => {
+        if (e.key === 'ArrowLeft' && currentLane > -1) currentLane--;
+        if (e.key === 'ArrowRight' && currentLane < 1) currentLane++;
+        if ((e.key === 'ArrowUp' || e.key === 'w') && !isJumping) { velocityY = 0.22; isJumping = true; }
+      };
+
+      function animate() {
+        currentGameLoop = requestAnimationFrame(animate);
+        player.position.x += (currentLane * 2.5 - player.position.x) * 0.2;
+
+        if (isJumping) {
+          playerY += velocityY;
+          velocityY -= 0.012;
+          if (playerY <= 0.8) { playerY = 0.8; isJumping = false; }
+        }
+        player.position.y = playerY;
+
+        obstacles.forEach((obs, i) => {
+          obs.position.z += 0.35;
+          if (Math.abs(obs.position.z - player.position.z) < 0.8 && Math.abs(obs.position.x - player.position.x) < 0.8 && player.position.y < 1.4) {
+            alert('Game Over! Restarting...');
+            obstacles.forEach(o => scene.remove(o));
+            obstacles.length = 0;
+          }
+        });
+
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    // --- GAME 2: MINECRAFT VOXEL 3D ---
+    function launchMinecraft() {
+      const canvas = document.getElementById('gameCanvas');
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x38bdf8);
+
+      const camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      currentThreeRenderer = renderer;
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+
+      const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+      const grassMat = new THREE.MeshBasicMaterial({ color: 0x22c55e });
+
+      for (let x = -4; x <= 4; x++) {
+        for (let z = -4; z <= 4; z++) {
+          const block = new THREE.Mesh(boxGeo, grassMat);
+          block.position.set(x, 0, z);
+          scene.add(block);
+        }
+      }
+
+      camera.position.set(0, 4, 7);
+      camera.lookAt(0, 0, 0);
+
+      function animate() {
+        currentGameLoop = requestAnimationFrame(animate);
+        scene.rotation.y += 0.005;
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    // --- GAME 3: RACER ---
+    function launchRacing() {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 600; canvas.height = 800;
+      let carX = 270;
+      const traffic = [];
+
+      setInterval(() => traffic.push({ x: Math.random() * 400 + 80, y: -100 }), 1200);
+
+      window.onkeydown = (e) => {
+        if (e.key === 'ArrowLeft' && carX > 80) carX -= 30;
+        if (e.key === 'ArrowRight' && carX < 460) carX += 30;
+      };
+
+      function loop() {
+        currentGameLoop = requestAnimationFrame(loop);
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, 600, 800);
+        ctx.fillStyle = '#6366f1'; ctx.fillRect(carX, 650, 50, 90);
+
+        ctx.fillStyle = '#ef4444';
+        traffic.forEach(t => {
+          t.y += 4;
+          ctx.fillRect(t.x, t.y, 50, 90);
+        });
+      }
+      loop();
+    }
+
+    // --- GAME 4: SPACE INVADERS ---
+    function launchInvaders() {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 600; canvas.height = 800;
+      let playerX = 270;
+      const bullets = [];
+      const enemies = [];
+
+      setInterval(() => enemies.push({ x: Math.random() * 520, y: -30 }), 1000);
+
+      window.onkeydown = (e) => {
+        if (e.key === 'ArrowLeft' && playerX > 20) playerX -= 25;
+        if (e.key === 'ArrowRight' && playerX < 530) playerX += 25;
+        if (e.key === ' ') bullets.push({ x: playerX + 18, y: 720 });
+      };
+
+      function loop() {
+        currentGameLoop = requestAnimationFrame(loop);
+        ctx.fillStyle = '#090d16'; ctx.fillRect(0, 0, 600, 800);
+        ctx.fillStyle = '#a855f7'; ctx.fillRect(playerX, 730, 40, 30);
+
+        ctx.fillStyle = '#38bdf8';
+        bullets.forEach(b => { b.y -= 8; ctx.fillRect(b.x, b.y, 4, 12); });
+
+        ctx.fillStyle = '#f43f5e';
+        enemies.forEach(e => { e.y += 2; ctx.fillRect(e.x, e.y, 35, 30); });
+      }
+      loop();
+    }
+
+    // --- GAME 5: FLAPPY DASH ---
+    function launchFlappy() {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 600; canvas.height = 800;
+      let birdY = 300, velocity = 0;
+
+      window.onclick = window.onkeydown = () => { velocity = -7; };
+
+      function loop() {
+        currentGameLoop = requestAnimationFrame(loop);
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 600, 800);
+        velocity += 0.4; birdY += velocity;
+        if (birdY > 750) birdY = 750;
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath(); ctx.arc(200, birdY, 20, 0, Math.PI * 2); ctx.fill();
+      }
+      loop();
+    }
+
+    window.onload = () => renderGames();
+  </script>
+</body>
+</html>
